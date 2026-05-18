@@ -27,6 +27,16 @@ async function getMovieIds() {
   return cachedIds;
 }
 
+function stringToHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+}
+
 function seededRandom(seed: number) {
   let x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
@@ -51,13 +61,12 @@ export async function GET(request: NextRequest) {
     let selectedId: number;
 
     if (seed !== null) {
-      const seedNum = parseInt(seed, 10);
-
-      if (isNaN(seedNum)) {
-        return NextResponse.json(
-          { error: "Invalid seed parameter" },
-          { status: 400 }
-        );
+      let seedNum: number;
+      
+      if (/^\d+$/.test(seed)) {
+        seedNum = parseInt(seed, 10);
+      } else {
+        seedNum = stringToHash(seed);
       }
 
       const index = Math.floor(
